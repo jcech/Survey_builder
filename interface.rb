@@ -4,6 +4,7 @@ require './lib/survey'
 require './lib/choice'
 require './lib/question'
 require './lib/answer'
+require './lib/user'
 
 database_configurations = YAML::load(File.open('./db/config.yml'))
 development_configuration = database_configurations['development']
@@ -52,6 +53,32 @@ def designer_menu
    end
 end
 
+def taker_menu
+  puts "Enter your name:"
+  user_name = gets.chomp
+  new_user = User.create(:description => user_name)
+  take_survey(new_user)
+end
+
+def take_survey(user)
+  list_surveys
+  puts "\n"
+  puts "Please select the number of the survey you wish to take."
+  selected_survey = Survey.all[gets.chomp.to_i - 1]
+  selected_survey.questions.each do |question|
+    system 'clear'
+    puts "#{question.description}"
+      question.answers.each do |answer|
+        puts "~ #{answer.description}"
+      end
+      answer = gets.chomp
+      found_answer = question.answers.find_by(description: answer)
+      Choice.create(:answer_id => found_answer.id, :user_id => user.id)
+  end
+end
+
+
+
 def add_survey
   puts "What is the name of your new survey:"
   survey_name = gets.chomp
@@ -90,7 +117,9 @@ def add_answers(question)
   end
 end
 
+
 def list_surveys
-  Survey.all.each { |survey| puts survey.description }
+  Survey.all.each_with_index { |survey, index| puts "#{index +1}) #{survey.description}" }
 end
+
 main_menu
