@@ -36,6 +36,7 @@ def designer_menu
   until choice == "e"
     puts "Press 'a' to add a survey"
     puts "Press 'l' to list all your surveys"
+    puts "Press 'ql' to list all the answers for a particular question"
     puts "Press 'e' to exit the program"
 
     designer_input = gets.chomp.downcase
@@ -44,6 +45,8 @@ def designer_menu
       add_survey
     when 'l'
       list_surveys
+    when 'ql'
+      list_answers_for_question
     when 'e'
       exit
     else
@@ -82,8 +85,14 @@ end
 def add_survey
   puts "What is the name of your new survey:"
   survey_name = gets.chomp
-  new_survey = Survey.create(:description => survey_name)
-  add_questions(new_survey)
+  new_survey = Survey.new(:description => survey_name)
+  if new_survey.save
+    puts "'#{survey_name}' has been added to your Survey List"
+    add_questions(new_survey)
+  else
+    new_survey.errors.full_messages.each { |message| puts message }
+    add_survey
+  end
 end
 
 def add_questions(survey)
@@ -117,9 +126,21 @@ def add_answers(question)
   end
 end
 
-
 def list_surveys
   Survey.all.each_with_index { |survey, index| puts "#{index +1}) #{survey.description}" }
+end
+
+def list_answers_for_question
+  list_surveys
+  survey_index = gets.chomp.to_i
+  current_survey = Survey.all[survey_index -1]
+  current_survey.questions.each_with_index do |question, index|
+    puts "#{index +1}) #{question.description}"
+  end
+  puts "Choose a question to see the user choices"
+  question_index = gets.chomp.to_i
+  current_question = current_survey.questions[question_index -1]
+  puts current_question.description
 end
 
 main_menu
